@@ -15,9 +15,9 @@ from scrape_sale import scrape_sale
 from bs4 import BeautifulSoup
 
 def crawl(locations):
-    link='http://bidfta.com'
+    link='https://www.bidfta.com/bidderHome'
     page=requests.get(link)
-    soup=BeautifulSoup(page, 'lxml')
+    soup=BeautifulSoup(page.text, 'lxml')
     day=datetime.date.today().day
 
     auctions=soup.findAll('div', { 'class' : 'medium-4 columns auction' })

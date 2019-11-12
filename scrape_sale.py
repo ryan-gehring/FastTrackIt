@@ -7,7 +7,7 @@ from byteify import byteify
 
 def scrape_sale(sale):
     page = requests.get(sale)
-    soup = BeautifulSoup(page, 'lxml')
+    soup = BeautifulSoup(page.text, 'lxml')
 
     catalog = soup.find('table', { 'id': 'DataTable' })
 
