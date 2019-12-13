@@ -10,46 +10,56 @@ import urllib.request
 import time
 import pandas as pd
 
-#Setup
-#Webpage to Crawl
-urlpage = 'https://www.bidfta.com/'
-zipCode = 45236
+#Define
+bid_fta_homepage = 'https://www.bidfta.com/'
+zip_code = 45236
 
-#Driver and driver options
-driverOptions = Options()
-driverOptions.headless = True
-#Uncomment for full browser
-driver = webdriver.Firefox()
-#Uncomment for headless browswer
-#driver = webdriver.Firefox(options=driverOptions)
-driver.implicitly_wait(15)
+#Driver Options
+browser = "FIREFOX" #FIREFOX or CHROME
+headless = False
+implicitly_wait = 15 #Seconds to wait implicitly if not explicitly set
 
-#Wait action Timeout explicit when needed
-wait = WebDriverWait(driver, 10)
+def setup_driver (headless,browser,implicitly_wait):
+	if headless:
+		driver_options = Options()
+		driver_options.headless = True
+		driver = webdriver.Firefox(options=driver_options)
+	else:
+		driver = webdriver.Firefox()
+	
+	driver.implicitly_wait(15)
+	return driver
 
-#Crawling actions
-driver.get(urlpage)
-results = driver.find_elements_by_xpath("//*[@class='col-xs-12 col-sm-6 col-md-4 col-lg-3 product-list padd-0 slick-slide slick-active']")
+def filter_auctions_by_zip(driver,bid_fta_homepage):
+	#Wait action Timeout explicit when needed
+	wait = WebDriverWait(driver, 10)
 
-for eachAuction in results:
-	print(eachAuction.text)
+	driver.get(bid_fta_homepage)
 
-zipCodeField = driver.find_element_by_id("zip")
-zipCodeField.send_keys(zipCode)
-#zipCodeField.submit()
-milesRadius = Select(driver.find_element_by_id("miles"))
-milesRadius.select_by_value('50')
-#milesRadius.click()
-filterButton = driver.find_element_by_class_name("filterAuction")
-filterButton.click()
+	#Fill out zipcode and search radius(miles)
+	zip_code_field = driver.find_element_by_id("zip")
+	zip_code_field.send_keys(zip_code)
+	milesRadius = Select(driver.find_element_by_id("miles"))
+	milesRadius.select_by_value('50')
+	#Click button to apply filter
+	filterButton = driver.find_element_by_class_name("filterAuction")
+	filterButton.click()
 
-loadingOverlay = driver.find_element_by_class_name("overlay")
-wait.until(EC.invisibility_of_element_located(loadingOverlay));
-time.sleep(2)
-results = driver.find_elements_by_xpath("//*[@class='col-xs-12 col-sm-6 col-md-4 col-lg-3 product-list padd-0 slick-slide slick-active']")
-print("==========================================================================")
-for eachAuction in results:
-	print(eachAuction.text)
+	#Wait for loading overlay
+	loadingOverlay = driver.find_element_by_class_name("overlay")
+	wait.until(EC.invisibility_of_element_located(loadingOverlay))
+	time.sleep(2)
 
-#Cleanup
-driver.quit()
+	#Print all auction results on page
+	results = driver.find_elements_by_xpath("//*[@class='col-xs-12 col-sm-6 col-md-4 col-lg-3 product-list padd-0 slick-slide slick-active']")
+	print("==========================================================================")
+	for eachAuction in results:
+		print(eachAuction.text)
+
+def clean_up ():
+	driver.quit()
+
+#Run it
+driver = setup_driver (headless,browser,implicitly_wait)
+filter_auctions_by_zip(driver,bid_fta_homepage)
+clean_up()
