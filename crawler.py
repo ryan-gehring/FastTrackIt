@@ -12,11 +12,13 @@ import pandas as pd
 
 #Define
 bid_fta_homepage = 'https://www.bidfta.com/'
+bid_fta_all_auctions = 'https://www.bidfta.com/home'
 zip_code = 45236
+city = 'Cincinnati'
 
 #Driver Options
 browser = "FIREFOX" #FIREFOX or CHROME
-headless = False
+headless = False #Open the browser in headless mode = True
 implicitly_wait = 15 #Seconds to wait implicitly if not explicitly set
 
 def setup_driver (headless,browser,implicitly_wait):
@@ -30,7 +32,7 @@ def setup_driver (headless,browser,implicitly_wait):
 	driver.implicitly_wait(15)
 	return driver
 
-def filter_auctions_by_zip(driver,bid_fta_homepage):
+def filter_auctions_by_zip(driver,bid_fta_homepage,zip_code):
 	#Wait action Timeout explicit when needed
 	wait = WebDriverWait(driver, 10)
 
@@ -56,10 +58,22 @@ def filter_auctions_by_zip(driver,bid_fta_homepage):
 	for eachAuction in results:
 		print(eachAuction.text)
 
+def get_all_auctions_filtered_locations(driver,bid_fta_all_auctions,city):
+
+	#From dropdown select anything with cincinnati
+	driver.get(bid_fta_all_auctions)
+	warehouse_dropdown = driver.find_element_by_xpath("//*[@class='multiselect-container dropdown-menu']")
+	warehouses = warehouse_dropdown.find_elements_by_tag_name("li")
+	print("==========================================================================")
+	for warehouse in warehouses:
+		warehouse_location = warehouse.find_element_by_class_name("checkbox")
+		print(warehouse_location.get_attribute("title"))
+
 def clean_up ():
 	driver.quit()
 
 #Run it
 driver = setup_driver (headless,browser,implicitly_wait)
-filter_auctions_by_zip(driver,bid_fta_homepage)
-clean_up()
+get_all_auctions_filtered_locations(driver,bid_fta_all_auctions,city)
+#filter_auctions_by_zip(driver,bid_fta_homepage)
+#clean_up()
