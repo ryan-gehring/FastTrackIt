@@ -22,6 +22,9 @@ browser = "FIREFOX" #FIREFOX or CHROME. Havent tested with Chrome yet
 headless = False #Open the browser in headless mode = True/False
 implicitly_wait = 15 #Seconds to wait implicitly if not explicitly set
 
+class Auction:
+	def __init__(self,item)
+
 def change_page (driver,wait,page_num):
 	page_input = driver.find_element_by_id("pageInput")
 	page_input.send_keys(page_num)
@@ -111,17 +114,16 @@ def get_total_pages (driver):
 
 	return int(total_pages.text)
 
-def get_all_items_on_page_by_auction_id(driver,auction_id,auction_dictionary):
+def navigate_to_auction_items_by_auction_id(driver,auction_id,auction_dictionary):
 	#Get auction dictionary items
 	auction_details = auction_dictionary.get(auction_id)
-	auction_end = auction_details[0]
-	auction_time_remaining = auction_details[1]
 	auction_link = auction_details[2]
 
 	auction_link_num = auction_link[-5:]
 	auction_items_link = "https://www.bidfta.com/auctionItems?listView=true&idauctions=" + auction_link_num + "&pageId=1"
 	driver.get(auction_items_link)
 
+def get_all_items_on_page(driver):
 	item_dictionary = {}
 	item_details = []
 	all_items_on_page = driver.find_elements_by_xpath("//div[starts-with(@id,'itemContainer')]")
@@ -143,6 +145,33 @@ def get_all_items_on_page_by_auction_id(driver,auction_id,auction_dictionary):
 
 	return item_dictionary
 
+def add_all_items_to_auction(driver,auction_id,auction_dictionary):
+	#Navigate to item page for a specific auction
+	navigate_to_auction_items_by_auction_id(driver,auction_id,auction_dictionary)
+
+	#Get the number of result pages
+	total_result_pages = get_total_pages (driver)
+
+	#Scan all pages and pull auction info into new dictionary
+	all_items_dict = {}
+	for i in range(2, total_result_pages+1):
+		all_items_dict.update(get_all_items_on_page(driver))
+		change_page(driver,wait,i)
+
+	#Get final page
+	all_items_dict.update(get_all_items_on_page(driver))
+	
+	#Get auction dictionary items
+	auction_details = auction_dictionary.get(auction_id)
+	
+	#Add the items to the values for that auction_id
+	auction_details.extend(all_items_dict)
+
+	#Add that item-dictionary to the auction-dictionary
+	auction_dictionary[auction_id] = auction_details
+
+	return auction_dictionary
+
 def add_items_to_auction(driver,auction_id,auction_dictionary):
 	#Get auction dictionary items
 	auction_details = auction_dictionary.get(auction_id)
@@ -150,6 +179,7 @@ def add_items_to_auction(driver,auction_id,auction_dictionary):
 	auction_time_remaining = auction_details[1]
 	auction_link = auction_details[2]
 
+	#
 
 
 	#Add items to auction_dictionary
@@ -195,10 +225,31 @@ driver,actions,wait = setup_driver (headless,browser,implicitly_wait)
 #print(one_page_of_auctions)
 
 #Get all pages of auctions for cincinnati
-all_auctions = find_all_auctions_by_city(driver)
+#all_auctions = find_all_auctions_by_city(driver)
 #print(all_auctions.keys())
 
 #Get one page of items from auction
-page_of_items = get_all_items_on_page_by_auction_id(driver,list(all_auctions.keys())[0],all_auctions)
-print(len(page_of_items))
+#page_of_items = get_all_items_on_page_by_auction_id(driver,list(all_auctions.keys())[0],all_auctions)
+#print(len(page_of_items))
+
 #clean_up()
+
+
+#Testing
+#Get all auctions
+all_auctions = find_all_auctions_by_city(driver)
+
+#Statically set auction_id for this test
+auction_id = list(all_auctions.keys())[0]
+
+#Pull items for one auction
+auction_dictionary_with_items = add_all_items_to_auction(driver,auction_id,all_auctions)
+print(auction_dictionary_with_items[auction_id])
+try:
+	print(type(auction_dictionary_with_items[auction_id][3]))
+except:
+	print()
+try:
+	print(auction_dictionary_with_items[auction_id][3]['RED0173404'])
+except:
+	print()
