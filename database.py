@@ -36,22 +36,24 @@ def setup_database():
     database = r"pythonsqlite.db"
  
  
-    sql_create_auctions_table = """ CREATE TABLE IF NOT EXISTS auctions (
-                                        auction_id text PRIMARY KEY,
-                                        auction_end text,
-									    auction_time_remaining text,
-                                        auction_link text
-                                    ); """
+    sql_create_auctions_table = """ 
+    CREATE TABLE IF NOT EXISTS auctions (
+    auction_id text PRIMARY KEY,
+    auction_end text,
+	auction_time_remaining text,
+    auction_link text
+    );"""
  
-    sql_create_auction_items_table = """CREATE TABLE IF NOT EXISTS auction_items (
-                                    item_lot_id text PRIMARY KEY,
-                                    item_description text,
-									item_status text,
-									item_current_bid numeric,
-									item_msrp numeric,
-									auction_id text,
-                                    FOREIGN KEY (auction_id) REFERENCES auctions (auction_id)
-                                );"""
+    sql_create_auction_items_table = """
+    CREATE TABLE IF NOT EXISTS auction_items (
+    item_lot_id text PRIMARY KEY,
+    item_description text,
+	item_status text,
+	item_current_bid numeric,
+	item_msrp numeric,
+	auction_id text,
+    FOREIGN KEY (auction_id) REFERENCES auctions (auction_id)
+    );"""
  
     # create a database connection
     conn = create_connection(database)

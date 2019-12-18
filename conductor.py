@@ -1,16 +1,12 @@
 import crawler
 import database
 
-database.setup_database
+database.setup_database()
 conn = database.create_connection('pythonsqlite.db')
 cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
 result = cur.fetchall()
 print(result)
-for r in result:
-    print(r)
-#cursor = conn.cursor()
 
-#print(cursor.execute("SELECT * FROM sqlite_master WHERE type='table';"))
 
 
 
