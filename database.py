@@ -49,7 +49,7 @@ def create_table(conn, create_table_sql):
 
 
 def setup_database():
-    database = r"pythonsqlite.db"
+    database = r"data/pythonsqlite.db"
  
  
     sql_create_auctions_table = """ 
