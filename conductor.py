@@ -31,7 +31,7 @@ all_items_for_auction = crawler.get_all_items_by_auction_id(driver,wait,auction_
 #############################
 #Create empty database with auction and auction_items table
 database.setup_database()
-conn = database.create_connection('pythonsqlite.db')
+conn = database.create_connection('data/pythonsqlite.db')
 cursor = conn.cursor()
 
 #Add auction details to database
