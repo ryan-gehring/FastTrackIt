@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException
 import urllib.request
 import time
 import pandas as pd
+import database
 
 #Define
 bid_fta_homepage = 'https://www.bidfta.com/'
@@ -135,23 +136,37 @@ def get_all_items_by_auction_id(driver,wait,auction_id,auction_dictionary):
 
 	return all_items_dict
 
-''' Turn this into a function to loop through all filtered auctions and add items to the database
-def add_items_to_all_auctions(driver,auction_id,auction_dictionary):
-	#Get auction dictionary items
-	auction_details = auction_dictionary.get(auction_id)
-	auction_end = auction_details[0]
-	auction_time_remaining = auction_details[1]
-	auction_link = auction_details[2]
+#Finish building this function to loop through all auctions and get items.
+def add_items_to_all_auctions(driver,wait,auction_dictionary):
 
-	#
+	database.setup_database()
+	conn = database.create_connection('data/pythonsqlite.db')
+	cursor = conn.cursor()
+
+	#Add auction details to database
+	database.add_auction_details_to_database(auction_dictionary,cursor)
+
+	for key,value in auction_dictionary.items():
+		auction_id_value = key
+        #auction_end_value = value[0]
+        #auction_time_remaining_value = value[1]
+        #auction_link_value = value[2]
+		all_items_for_auction = get_all_items_by_auction_id(driver,wait,auction_id_value,auction_dictionary)
+		
+		#Add auction items to database
+		database.add_items_to_database(all_items_for_auction,auction_id_value,cursor)
 
 
 	#Add items to auction_dictionary
-	auction_details.extend(item_details)
-	auction_dictionary_with_items[auction_id] = auction_details
+	#auction_details.extend(item_details)
+	#auction_dictionary_with_items[auction_id] = auction_details
 
-	return auction_dictionary_with_items
-'''
+	conn.commit()
+	cursor.close()
+	conn.close()
+
+	return None #auction_dictionary_with_items
+
 
 def find_all_auctions_by_city(driver,wait,city):
 	auction_dictionary = {}

@@ -26,7 +26,8 @@ def print_auction_items_table(db_file,conn):
         c = conn.cursor()
         c.execute(sql_select_all_from_auctions)
         results = c.fetchall()
-        print(results)
+        for each_item in results:
+            print(each_item)
     except Error as e:
         print(e)
     conn.commit()
