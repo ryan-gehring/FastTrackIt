@@ -12,8 +12,10 @@ import time
 import pandas as pd
 import database
 
+#Debug
+import time
+
 #Define
-#bid_fta_homepage = 'https://www.bidfta.com/'
 bid_fta_all_auctions = 'https://www.bidfta.com/home'
 
 def change_page (driver,wait,page_num):
@@ -82,7 +84,6 @@ def get_all_auctions_on_page (driver,wait):
 	
 def get_total_pages (driver):
 	total_pages = driver.find_element_by_xpath("//span[@class='total total_page']")
-	#print(total_pages.text)
 
 	return int(total_pages.text)
 
@@ -94,7 +95,7 @@ def navigate_to_auction_items_by_auction_id(driver,auction_id,auction_dictionary
 	auction_items_link = "https://www.bidfta.com/auctionItems?listView=true&idauctions=" + auction_link_num + "&pageId=1"
 	driver.get(auction_items_link)
 
-def get_all_items_on_page(driver):
+def get_all_items_on_page(driver,wait):
 	item_dictionary = {}
 	item_details = []
 	all_items_on_page = driver.find_elements_by_xpath("//div[starts-with(@id,'itemContainer')]")
@@ -111,14 +112,15 @@ def get_all_items_on_page(driver):
 			item_msrp = item_msrp_raw.split('$ ')[1]
 		else:
 			item_msrp = None
+		item_link = each_item.find_element_by_xpath(".//a[starts-with(@href,'/itemDetails')]").get_attribute("href")
 
 		#Use the lot_id as a key and the rest of the details as values
-		item_details = [item_description,item_status,item_current_bid,item_msrp]
+		item_details = [item_description,item_status,item_current_bid,item_msrp,item_link]
 		item_dictionary[item_lot_id] = item_details
 
 	return item_dictionary
 
-def get_all_items_by_auction_id(driver,wait,auction_id,auction_dictionary):
+def get_all_items_by_auction_id(driver,wait5,wait_halfsec,auction_id,auction_dictionary):
 	#Navigate to item page for a specific auction
 	navigate_to_auction_items_by_auction_id(driver,auction_id,auction_dictionary)
 
@@ -128,29 +130,40 @@ def get_all_items_by_auction_id(driver,wait,auction_id,auction_dictionary):
 	#Scan all pages and pull auction info into new dictionary
 	all_items_dict = {}
 	for i in range(2, total_result_pages+1):
-		all_items_dict.update(get_all_items_on_page(driver))
-		change_page(driver,wait,i)
+		all_items_dict.update(get_all_items_on_page(driver,wait_halfsec))
+		change_page(driver,wait5,i)
 
 	#Get final page
-	all_items_dict.update(get_all_items_on_page(driver))
+	all_items_dict.update(get_all_items_on_page(driver,wait_halfsec))
 
 	return all_items_dict
 
 #Finish building this function to loop through all auctions and get items.
-def add_items_to_all_auctions(driver,wait,auction_dictionary,connection):
+def add_items_to_all_auctions(driver,wait5,wait_halfsec,auction_dictionary,connection):
 	#Create a cursor for database entries
 	cursor = connection.cursor()
 
 	#Add auction details to database
 	database.add_auction_details_to_database(auction_dictionary,cursor)
 
+	#Debug
+	counter = 0
 	for key in auction_dictionary.keys():
+		#Debug
+		start_time = time.time()
+		counter += 1
+		
 		#Get auction items by auction id
 		auction_id_value = key
-		all_items_for_auction = get_all_items_by_auction_id(driver,wait,auction_id_value,auction_dictionary)
+		all_items_for_auction = get_all_items_by_auction_id(driver,wait5,wait_halfsec,auction_id_value,auction_dictionary)
 		
 		#Add auction items to database
 		database.add_items_to_database(all_items_for_auction,auction_id_value,cursor)
+
+		#Debug
+		print(key)
+		print("--- %s seconds ---" % (time.time() - start_time))
+		print(str(counter) + " of " + str(len(auction_dictionary.keys())))
 
 	#Commit the items to the database and close the cursor
 	connection.commit()
@@ -158,17 +171,17 @@ def add_items_to_all_auctions(driver,wait,auction_dictionary,connection):
 
 	return None
 
-def find_all_auctions_by_city(driver,wait,city):
+def find_all_auctions_by_city(driver,wait5,city):
 	auction_dictionary = {}
-	filter_auctions_by_warehouse_city(driver,wait,bid_fta_all_auctions,city)
+	filter_auctions_by_warehouse_city(driver,wait5,bid_fta_all_auctions,city)
 	#Get the number of result pages
 	total_result_pages = get_total_pages (driver)
 	#Scan all pages and pull auction info
 	for i in range(2, total_result_pages+1):
-		auction_dictionary.update(get_all_auctions_on_page(driver,wait))
-		change_page(driver,wait,i)
+		auction_dictionary.update(get_all_auctions_on_page(driver,wait5))
+		change_page(driver,wait5,i)
 	#Get final page
-	auction_dictionary.update(get_all_auctions_on_page(driver,wait))
+	auction_dictionary.update(get_all_auctions_on_page(driver,wait5))
 
 	return auction_dictionary
 
@@ -182,7 +195,8 @@ def setup_driver (headless,browser,implicitly_wait):
 	
 	actions = ActionChains(driver)
 	#Wait time when using explicit wait
-	wait = WebDriverWait(driver, 10)
-	driver.implicitly_wait(10)
+	wait5 = WebDriverWait(driver, 5)
+	wait_halfsec = WebDriverWait(driver, .5)
+	driver.implicitly_wait(implicitly_wait)
 
-	return driver,actions,wait
+	return driver,actions,wait5,wait_halfsec

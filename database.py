@@ -18,11 +18,6 @@ def clear_database(db_file,conn):
     conn.close()
 
 def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -32,26 +27,15 @@ def create_connection(db_file):
  
     return conn
  
- 
 def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
     try:
         c = conn.cursor()
         c.execute(create_table_sql)
     except Error as e:
         print(e)
 
-
-
-
-def setup_database():
-    database = r"data/pythonsqlite.db"
- 
- 
+def setup_database(database_file):
+     
     sql_create_auctions_table = """ 
     CREATE TABLE IF NOT EXISTS auctions (
     auction_id text PRIMARY KEY,
@@ -67,12 +51,13 @@ def setup_database():
 	item_status text,
 	item_current_bid numeric,
 	item_msrp numeric,
+    item_link text,
 	auction_id text,
     FOREIGN KEY (auction_id) REFERENCES auctions (auction_id)
     );"""
  
     # create a database connection
-    conn = create_connection(database)
+    conn = create_connection(database_file)
  
     # create tables
     if conn is not None:
@@ -109,9 +94,10 @@ def add_items_to_database(all_items_for_auction,auction_id,cursor):
         item_status_value = value[1]
         item_current_bid_value = value[2]
         item_msrp_value = value[3]
+        item_link_value = value[4]
         auction_id_value = auction_id
         in_statement = """
-                    INSERT INTO auction_items (item_lot_id, item_description, item_status, item_current_bid, item_msrp, auction_id) 
-                    VALUES (?,?,?,?,?,?);
+                    INSERT INTO auction_items (item_lot_id, item_description, item_status, item_current_bid, item_msrp, item_link, auction_id) 
+                    VALUES (?,?,?,?,?,?,?);
                     """
-        cursor.execute(in_statement, (item_lot_id_value,item_description_value,item_status_value,item_current_bid_value,item_msrp_value,auction_id_value))
+        cursor.execute(in_statement, (item_lot_id_value,item_description_value,item_status_value,item_current_bid_value,item_msrp_value,item_link_value,auction_id_value))
