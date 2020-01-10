@@ -18,7 +18,7 @@ import time
 #Define
 bid_fta_all_auctions = 'https://www.bidfta.com/home'
 
-def change_page (driver,wait,page_num):
+def change_page(driver,wait,page_num):
 	page_input = driver.find_element_by_id("pageInput")
 	page_input.send_keys(page_num)
 	
@@ -29,9 +29,9 @@ def change_page (driver,wait,page_num):
 	#Wait for loading overlay
 	loadingOverlay = driver.find_element_by_class_name("overlay")
 	wait.until(EC.invisibility_of_element_located(loadingOverlay))
-	time.sleep(1)
+	time.sleep(.5)
 
-def clean_up (driver):
+def clean_up(driver):
 	driver.quit()
 
 def filter_auctions_by_warehouse_city(driver,wait,bid_fta_all_auctions,city):
@@ -95,7 +95,7 @@ def navigate_to_auction_items_by_auction_id(driver,auction_id,auction_dictionary
 	auction_items_link = "https://www.bidfta.com/auctionItems?listView=true&idauctions=" + auction_link_num + "&pageId=1"
 	driver.get(auction_items_link)
 
-def get_all_items_on_page(driver,wait):
+def get_all_items_on_page(driver,wait_halfsec):
 	item_dictionary = {}
 	item_details = []
 	all_items_on_page = driver.find_elements_by_xpath("//div[starts-with(@id,'itemContainer')]")
@@ -107,11 +107,17 @@ def get_all_items_on_page(driver,wait):
 		item_description = each_item.find_element_by_xpath(".//p[contains(@class,'title')]").text
 		item_status = each_item.find_element_by_xpath(".//p[contains(@class,'itemStatus')]").text
 		item_current_bid = each_item.find_element_by_xpath(".//span[starts-with(@id,'currentBid')]").text.split('$')[1]
-		item_msrp_raw = each_item.find_element_by_xpath(".//div[contains(@class,'text-right')]").text
-		if item_msrp_raw:
-			item_msrp = item_msrp_raw.split('$ ')[1]
-		else:
-			item_msrp = None
+		wait_halfsec = WebDriverWait(each_item, .5)
+		try:
+			item_msrp_raw = wait_halfsec.until(EC.presence_of_element_located((By.XPATH, ".//div[contains(@class,'text-right')]"))).text
+			if item_msrp_raw:
+				item_msrp = item_msrp_raw.split('$ ')[1]
+			else:
+				item_msrp = None
+			#print(item_msrp)
+		except:
+			print("no msrp container")
+		item_msrp = None
 		item_link = each_item.find_element_by_xpath(".//a[starts-with(@href,'/itemDetails')]").get_attribute("href")
 
 		#Use the lot_id as a key and the rest of the details as values
@@ -165,6 +171,7 @@ def add_items_to_all_auctions(driver,wait5,wait_halfsec,auction_dictionary,conne
 		#Debug
 		print(key)
 		print("--- %s seconds ---" % (time.time() - start_time))
+		print(str((time.time() - start_time)/(len(all_items_for_auction))) + " seconds per item with " + str(len(all_items_for_auction)) + " total items.") 
 		print(str(counter) + " of " + str(len(auction_dictionary.keys())))
 
 	#Close the cursor
