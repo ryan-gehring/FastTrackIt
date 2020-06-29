@@ -9,3 +9,8 @@ The database will store auction details along with all auction items.
 *Crawler - Contains all required functions to navigate and pull data from the website  
 *Database - Database setup and maintenance functions  
 
+## Requirements
+*python selenium web driver
+**pip install selnium
+*geckodriver
+**Download and add the executable to PATH
