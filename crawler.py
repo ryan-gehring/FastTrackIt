@@ -56,6 +56,7 @@ def filter_auctions_by_warehouse_city(driver,wait,bid_fta_all_auctions,city,stat
 			warehouse_state_caret = warehouse_state.find_element_by_class_name("caret-container")
 			warehouse_state_caret.click()
 			break
+			#Will delete below, current design dictates a new browser session is always opened.
 			#Checks that the warehouse location isnt already selected since we dont want it to de-select it
 			#warehouse_state_checkbox = warehouse_state.get_attribute()
 			#if "active" not in warehouse_state_checkbox:
